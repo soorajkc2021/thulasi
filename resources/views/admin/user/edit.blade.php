@@ -1,4 +1,4 @@
-@extends('adminlte::page')
+@extends('layouts.admin')
 
 @section('title', 'Edit User')
     @section('content_header')
@@ -9,7 +9,7 @@
           </div>
           <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
-              <li class="breadcrumb-item"><a href="#">Home</a></li>
+              <li class="breadcrumb-item"><a href="/admin/dashboard">Home</a></li>
               <li class="breadcrumb-item active">Edit User</li>
             </ol>
           </div>
@@ -32,7 +32,7 @@
                 
 
                   <div class="" id="settings">
-                    <form class="form-horizontal" id="form_create" method="POST" data-url="/admin/user/edit/{{ $user->id }}" >
+                    <form class="form-horizontal" id="form_create" method="POST" data-url="/admin/users/{{ $user->id }}" >
                       @csrf
                       <div class="form-group row">
                         <label for="inputName" class="col-sm-3 col-form-label">Full Name</label>
@@ -50,7 +50,34 @@
                           
                         </div>
                       </div>
-                     
+                      <div class="form-group row ">
+
+                        <label for="inputEmail" class="col-sm-3 col-form-label">Update Password</label>
+                          <input type="hidden" name="update_password" value="0">
+                          <div class="col-sm-9 switch-checkbox">
+                            <label class=" switch">
+                              <input type="checkbox" value="1" id="update_password" name="update_password">
+                              <span class="slider round"></span>
+                            </label>
+                          </div>
+                      </div>
+                      <div class="form-group row password_updation" style="display: none">
+                        <label for="inputEmail" class="col-sm-3 col-form-label required-field">Password</label>
+                        <div class="col-sm-9">
+                          <input type="password" class="form-control"  name="password" id="inputPassword" placeholder="Password">
+                          <span id="error_password" class="error-text text-danger pull-right" style=""></span>
+
+                        </div>
+                      </div>
+
+                      <div class="form-group row password_updation" style="display: none">
+                        <label for="inputEmail" class="col-sm-3 col-form-label required-field">Confirm Password</label>
+                        <div class="col-sm-9">
+                          <input type="password" class="form-control"  name="password_confirmation" id="inputConfirmPassword" placeholder="Password">
+                          <span id="error_password_confirmation" class="error-text text-danger pull-right" style=""></span>
+
+                        </div>
+                      </div>
                     
                      
                       <div class="form-group row">
@@ -73,6 +100,7 @@
 
 @section('css')
 <link href='https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css' rel='stylesheet' type="text/css">
+<link href='{{ url('/adminlte/dist/css/custom.css') }}' rel='stylesheet' type="text/css">
 
 @stop
 <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
@@ -86,7 +114,7 @@
               var formData  =  $('#form_create').serialize(); 
               var url  =  $('#form_create').data('url'); 
               $.ajax({
-                    type: "POST",
+                    type: "PUT",
                     url: url,
                     data: formData,
                     beforeSend: function() {
@@ -111,6 +139,16 @@
                     },
                 });
             });
+            $("#update_password").change(function(){
+              
+              if($(this).is(':checked')){
+                $('.password_updation').show();
+              }else{
+                $('.password_updation').hide();
+              }
+              
+              
+            })
         });
     </script>
 @stop

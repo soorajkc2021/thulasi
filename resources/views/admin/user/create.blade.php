@@ -1,4 +1,4 @@
-@extends('adminlte::page')
+@extends('layouts.admin')
 
 @section('title', 'Create User')
     @section('content_header')
@@ -9,7 +9,7 @@
           </div>
           <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
-              <li class="breadcrumb-item"><a href="#">Home</a></li>
+              <li class="breadcrumb-item"><a href="/admin/dashboard">Home</a></li>
               <li class="breadcrumb-item active">Create User</li>
             </ol>
           </div>
@@ -32,7 +32,7 @@
          
               <div class="card-body">
                   <div class="" id="settings">
-                    <form class="form-horizontal" id="form_create" method="POST" data-url="{{ route('admin.user.add') }}" >
+                    <form class="form-horizontal" id="form_create" method="POST" data-url="/admin/users" >
                       @csrf
                       <div class="form-group row">
                         <label for="inputName" class="col-sm-3 col-form-label required-field">Full Name</label>
@@ -89,7 +89,7 @@
         @stop
 
 @section('css')
-<link href='{{ url('/vendor/adminlte/dist/css/custom.css') }}' rel='stylesheet' type="text/css">
+<link href='{{ url('/adminlte/dist/css/custom.css') }}' rel='stylesheet' type="text/css">
 
 <link href='https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css' rel='stylesheet' type="text/css">
 

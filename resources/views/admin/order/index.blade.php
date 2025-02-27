@@ -1,4 +1,4 @@
-@extends('adminlte::page')
+@extends('layouts.admin')
 
 @section('title', 'Orders')
     @section('content_header')
@@ -9,7 +9,7 @@
           </div>
           <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
-              <li class="breadcrumb-item"><a href="#">Home</a></li>
+              <li class="breadcrumb-item"><a href="/admin/dashboard">Home</a></li>
               <li class="breadcrumb-item active">Orders</li>
             </ol>
           </div>
@@ -17,13 +17,14 @@
      @stop
 
      @section('content')
-
+     @if($orders ->count())
         <div class="card">
+         
           <div class="card-header">
             
           </div>
           <!-- /.card-header -->
-          @if($orders ->count())
+          
           <div class="card-body">
             <div class="table-responsive">
 
@@ -60,9 +61,10 @@
             </div>
           </div>
           <!-- /.card-body -->
-          @endif
+         
         </div>
-        @stop
+        @endif
+  @stop
 
 @section('css')
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">

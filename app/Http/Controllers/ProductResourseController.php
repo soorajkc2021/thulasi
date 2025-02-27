@@ -130,6 +130,7 @@ class ProductResourseController extends BaseController
        
         $searchTerm = $request->get('search'); // Query parameter sent by Select2
         $brands     = Product::where('name', 'like', "%$searchTerm%")
+                        ->where('status',"Active")
                         ->limit(10)
                         ->get(['id', 'name']);
 

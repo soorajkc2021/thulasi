@@ -56,14 +56,9 @@ Route::prefix('admin')->middleware('auth:admin')->group(function () {
     Route::post('profile/{id}', [UserResourseController::class, 'profileUpdate']);
     Route::get('users', [UserResourseController::class, 'index'])
     ->name('admin.users');
-    Route::get('user/add', [UserResourseController::class, 'add'])
-    ->name('admin.user.add');
-    Route::post('user/add', [UserResourseController::class, 'create']);
-    Route::get('user/edit/{id}', [UserResourseController::class, 'edit']);
-    Route::post('user/edit/{id}', [UserResourseController::class, 'update']);
-    Route::get('user/delete/{id}', [UserResourseController::class, 'destroy']);
-
+ 
   
+    Route::resource('users', UserResourseController::class);
     Route::resource('brands', BrandResourseController::class);
     Route::resource('products', ProductResourseController::class);
     Route::resource('categories', CategoryResourseController::class);
@@ -72,12 +67,10 @@ Route::prefix('admin')->middleware('auth:admin')->group(function () {
     Route::resource('shops', ShopResourseController::class);
     Route::resource('inventories', InventoryResourseController::class);
     Route::resource('orders', OrderResourseController::class);
-   
+    
 
     
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
                 ->name('admin.logout');
-    Route::get('/dashboard', function () {
-                    return view('admin.dashboard');
-    })->name('admin.dashboard');
+    Route::get('/dashboard', [UserResourseController::class, 'adminDashboard'])->name('admin.dashboard');
 });

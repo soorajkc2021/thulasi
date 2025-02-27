@@ -5,9 +5,14 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Admin;
 use App\Models\User;
 use App\Models\Order;
+use App\Models\OrderProduct;
+use App\Models\Product;
+use App\Models\Inventory;
+use App\Models\Shop;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller as BaseController;
+use Carbon\Carbon;
 
 class UserResourseController extends BaseController
 {
@@ -39,23 +44,13 @@ class UserResourseController extends BaseController
         return view('admin.user.profile',compact('user'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
-    {
-        //
-    }
 
-    public function add()
+    public function create()
     {
        
         return view('admin.user.create');
     }
-    public function create(Request $request)
+    public function store(Request $request)
     {
         $request->validate([
                 'name'      => 'required',
@@ -106,21 +101,39 @@ class UserResourseController extends BaseController
     public function profileUpdate(Request $request, $id=null)
     {
       
+        $rules      = [
+            'name' => 'required',
+            'email' => 'required|email|unique:users,email,' . $id
+        ];
+        if(@$request->update_password == 1){
+            $rules['password'] = 'required|confirmed';
+        }
+        $request->validate($rules);
+        $attributes = $request->except(['update_password','password','password_confirmation','token']);
+
+
         $user       = Auth::user();
-        $attributes = $request->all();
         $user->update($attributes);
-        return redirect('admin/profile');
     }
     public function update(Request $request, $id)
     {
-        $request->validate([
-            'name' => 'required',
-            'email' => 'required|email|unique:users,email,' . $id
-        ]);
+        $attributes = $request->except(['update_password','password','password_confirmation','token']);
+        $rules      = [
+                        'name' => 'required',
+                        'email' => 'required|email|unique:users,email,' . $id
+                    ];
+        if(@$request->update_password == 1){
+            $rules['password'] = 'required|confirmed';
+        }
+
+        $request->validate($rules);
+        if(@$request->update_password == 1){
+            $attributes['password'] = Hash::make($request->password);
+        }
+
         $user       = User::find($id);
-        $attributes = $request->all();
+        
         $user->update($attributes);
-        return redirect('admin/user/edit/'.$id);
     }
 
     /**
@@ -142,5 +155,123 @@ class UserResourseController extends BaseController
             return response()->json(['status' =>  "success",'message'=>'user deleted successfully']);
         }
 
+    }
+
+    public function adminDashboard(Request $request)
+    {
+      
+        $data['order_count']        = Order::count();
+        $data['shop_count']         = Shop::count();
+        $data['product_count']      = Product::count();
+        $data['inventory_count']    = Inventory::count();
+        
+
+    
+        $month_orders = [];
+
+        for ($i = 1; $i <= 12; $i++) {
+            $month_orders[]   = 0;
+        }
+
+        $currentYear    = Carbon::now()->year;
+        $ordersByMonth  = Order::selectRaw('MONTH(created_at) as month, COUNT(*) as order_count')
+            ->whereYear('created_at', $currentYear)  // Filter by current year
+            ->groupBy('month')
+            ->orderBy('month', 'asc')  // To order by month (1 = January, 12 = December)
+            ->get();
+            if($ordersByMonth){
+                foreach ($ordersByMonth as $order) {
+                    $month_orders[$order->month -1]    =  $order->order_count;
+                }
+            }
+            $items  = OrderProduct::selectRaw("sum(order_products.quantity) as qty, products.name")
+           
+                                            ->leftJoin('products','products.id','=','order_products.product_id')
+                                            ->groupBy('product_id')
+                                            ->pluck('qty','name')->toArray();
+                                         
+           $backgroundColors = array_map(function($item) {
+               // Generate a color from the hash of the item name
+               $hash = md5($item); // md5 hash of the item name
+               return '#' . substr($hash, 0, 6); // Take the first 6 characters of the hash as the color code
+           }, array_keys($items));
+                                        
+             $products = [
+                   'datasets' =>[
+                        [
+                        'data' => array_values($items),  // The data values for each slice
+                        'backgroundColor' => array_values($backgroundColors),
+                       ]
+                   ],
+                   'labels' => array_keys($items), 
+            ]; 
+               
+      
+        return view('admin.dashboard',compact('data','month_orders','products'));
+    }
+
+    public function userDashboard(Request $request)
+    {
+        $user_id                    = \Auth::user()->id;
+         
+        $data['order_count']        = Order::where('user_id',$user_id)->count();
+     
+        $data['shop_count']         = Order::where('user_id',$user_id)
+                                    ->distinct('shop_id')->count('shop_id');
+                         
+
+       
+        $data['total_sell_price']    =Order::where('user_id',$user_id)->sum('total_sell_price');
+      
+
+
+        $items  = OrderProduct::selectRaw("sum(order_products.quantity) as qty, products.name")
+        ->leftJoin('orders','orders.id','=','order_products.order_id')
+        ->leftJoin('products','products.id','=','order_products.product_id')
+        ->where('orders.user_id',$user_id)
+        ->groupBy('product_id')
+        ->pluck('qty','name');
+        
+        $data['product_count']      = $items->count(); 
+       
+
+        $month_orders = [];
+
+        for ($i = 1; $i <= 12; $i++) {
+            $month_orders[]   = 0;
+        }
+
+        $currentYear    = Carbon::now()->year;
+        $ordersByMonth  = Order::selectRaw('MONTH(created_at) as month, COUNT(*) as order_count')
+                        ->where('user_id',$user_id)
+                        ->whereYear('created_at', $currentYear)  // Filter by current year
+                        ->groupBy('month')
+                        ->orderBy('month', 'asc')  // To order by month (1 = January, 12 = December)
+                        ->get();
+            if($ordersByMonth){
+                foreach ($ordersByMonth as $order) {
+                    $month_orders[$order->month -1]    =  $order->order_count;
+                }
+            }
+
+            $items  = $items->toArray();
+         
+                $backgroundColors = array_map(function($item) {
+                // Generate a color from the hash of the item name
+                $hash = md5($item); // md5 hash of the item name
+                return '#' . substr($hash, 0, 6); // Take the first 6 characters of the hash as the color code
+                }, array_keys($items));
+                        
+                $products = [
+                            'datasets' =>[
+                                [
+                                'data' => array_values($items),  // The data values for each slice
+                                'backgroundColor' => array_values($backgroundColors),
+                                ]
+                            ],
+                '           labels' => array_keys($items), 
+                        ]; 
+        return view('dashboard',compact('data','month_orders','products'));
+        
     }
 }
